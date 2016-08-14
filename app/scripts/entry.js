@@ -44,13 +44,13 @@ let auth = {
   }
 }
 
-let terms = 'dog_parks'
+let terms = 'dog parks'
 let near = 'Austin'
 
 let accessor = {
     consumerSecret : auth.consumerSecret,
     tokenSecret : auth.accessTokenSecret
-};
+}
 
 let parameters = []
 parameters.push(['term', terms])
