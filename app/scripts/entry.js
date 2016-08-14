@@ -30,37 +30,58 @@
 //
 // ReactDOM.render((<CheckBox/>), document.getElementById('container'))
 
-import Yelp from 'yelp'
 
-var yelp = new Yelp({
-  consumer_key: '0iCq3aY8yKpaVvy2Q1dyMA',
-  consumer_secret: 'fuJuRW9AgLOuVM6CLBEg99ul2Xc',
-  token: 'XEbcfGwJaCSPoLDlh4GTIIcyQMqfMTcv',
-  token_secret: '	-TeMkRuRd99_PRMGAEq9B4WDVnU'
-});
+import $ from 'jquery'
+import OAuth from './OAuth'
 
-yelp.search({ term: 'food', location: 'Montreal' })
-.then(function (data) {
-  console.log('data: ', data);
+let auth = {
+  consumerKey : "0iCq3aY8yKpaVvy2Q1dyMA",
+  consumerSecret : "fuJuRW9AgLOuVM6CLBEg99ul2Xc",
+  accessToken : "XEbcfGwJaCSPoLDlh4GTIIcyQMqfMTcv",
+  accessTokenSecret : "-TeMkRuRd99_PRMGAEq9B4WDVnU",
+  serviceProvider : {
+      signatureMethod : "HMAC-SHA1"
+  }
+}
+
+let terms = 'dog_parks'
+let near = 'Austin'
+
+let accessor = {
+    consumerSecret : auth.consumerSecret,
+    tokenSecret : auth.accessTokenSecret
+};
+
+let parameters = []
+parameters.push(['term', terms])
+parameters.push(['location', near])
+parameters.push(['callback', 'cb'])
+parameters.push(['oauth_consumer_key', auth.consumerKey])
+parameters.push(['oauth_consumer_secret', auth.consumerSecret])
+parameters.push(['oauth_token', auth.accessToken])
+parameters.push(['oauth_signature_method', 'HMAC-SHA1'])
+
+let message = {
+    'action' : 'https://api.yelp.com/v2/search',
+    'method' : 'GET',
+    'parameters' : parameters
+}
+
+OAuth.setTimestampAndNonce(message)
+OAuth.SignatureMethod.sign(message, accessor)
+
+let parameterMap = OAuth.getParameterMap(message.parameters)
+
+$.ajax({
+    'url' : message.action,
+    'data' : parameterMap,
+    'dataType' : 'jsonp',
+    'jsonpCallback' : 'cb',
+    'cache': true
 })
-.catch(function (err) {
-  console.error('err: ', err);
-});
-
-// See http://www.yelp.com/developers/documentation/v2/business
-yelp.business('yelp-san-francisco')
-  .then(console.log)
-  .catch(console.error);
-
-yelp.phoneSearch({ phone: '+15555555555' })
-  .then(console.log)
-  .catch(console.error);
-
-// A callback based API is also available:
-yelp.business('yelp-san-francisco', function(err, data) {
-  if (err) return console.log(error);
-  console.log(data);
-});
-
-
-console.log('testing yelp');
+.then(function(data) {
+  console.log('EVERYTHING IS AWESOME!: ', data);
+})
+.fail(function(e) {
+  console.error('BOOH!: ', e)
+})
